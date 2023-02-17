@@ -1,5 +1,6 @@
 package pl.freezemod;
 
+import it.unimi.dsi.fastutil.Hash;
 import net.fabricmc.api.ModInitializer;
 
 import org.slf4j.Logger;
