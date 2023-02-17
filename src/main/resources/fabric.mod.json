@@ -5,7 +5,7 @@
 	"name": "FreezeMod",
 	"description": "This is an example description! Tell everyone what your mod is about!",
 	"authors": [
-		"Me!"
+		"Skidamus"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
@@ -16,7 +16,7 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"pl.freezemod.ExampleMod"
+			"pl.freezemod.Freeze"
 		]
 	},
 	"mixins": [
