@@ -16,9 +16,10 @@ public class ServerPlayerInteractionManagerMixin {
 
     @Final @Shadow protected ServerPlayerEntity player;
 
-    @Inject(method = "tryBreakBlock", at = @At("HEAD"))
+    @Inject(method = "tryBreakBlock", at = @At("HEAD"), cancellable = true)
     private void preventBreakingBlocks(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
         if (Freeze.frozenPlayers.containsKey(this.player.getUuid())) {
+            cir.setReturnValue(false);
             cir.cancel();
         }
     }

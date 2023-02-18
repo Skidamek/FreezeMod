@@ -15,7 +15,7 @@ public class Freeze implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger("freezemod");
 	public static Map<UUID, FrozenPlayer> frozenPlayers = new HashMap<>();
 	public static List<UUID> frozenPlayersToRemove = new ArrayList<>();
-	public static Boolean freezeServer;
+	public static Boolean freezeServer = false;
 
 	@Override
 	public void onInitialize() {

@@ -68,7 +68,7 @@ public class ServerPlayNetworkHandlerMixin {
         UUID uuid = this.player.getUuid();
 
         if (frozenPlayers.containsKey(uuid)) {
-            this.player.setFrozenTicks(tick);
+            this.player.setFrozenTicks(Math.min(tick, 140)); // make 140 ticks max, to make animation go but don't hurt the player
 
             if (tick++ % 40 == 0) {
                 sendActionBarMessage("You are frozen", Formatting.AQUA);

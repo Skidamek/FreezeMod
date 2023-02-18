@@ -16,7 +16,7 @@ public class Commands {
     public static void register() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(
                 CommandManager.literal("freeze")
-                    .requires(source -> source.hasPermissionLevel(3))
+                    .requires(source -> source.hasPermissionLevel(4))
                     .then(
                             CommandManager.argument("targets", EntityArgumentType.entities())
                                     .executes(
@@ -99,19 +99,23 @@ public class Commands {
             addEffect(player);
         }
 
+        source.sendFeedback(TextHelper.literal("All players are now frozen").formatted(Formatting.AQUA), true);
+
         return 1;
     }
 
     private static int unFreezeServer(ServerCommandSource source) {
         freezeServer = false;
+        frozenPlayers.clear();
 
         List<ServerPlayerEntity> players = source.getWorld().getPlayers();
         for (ServerPlayerEntity player : players) {
             if (frozenPlayers.containsKey(player.getUuid())) {
-                frozenPlayers.remove(player.getUuid());
                 frozenPlayersToRemove.add(player.getUuid()); // This will be removed in next tick (ServerPlayNetworkHandlerMixin), to make sure that everything is properly synchronized
             }
         }
+
+        source.sendFeedback(TextHelper.literal("All players are no longer frozen").formatted(Formatting.GREEN), true);
 
         return 1;
     }
