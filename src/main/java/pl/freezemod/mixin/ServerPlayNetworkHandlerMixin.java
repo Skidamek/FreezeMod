@@ -62,18 +62,15 @@ public class ServerPlayNetworkHandlerMixin {
     }
 
     private int tick = 0;
-    private int allTicks = 0;
 
     @Inject(method = "tick", at = @At("HEAD"))
     public void onTick(CallbackInfo ci) throws CommandSyntaxException {
         UUID uuid = this.player.getUuid();
 
         if (frozenPlayers.containsKey(uuid)) {
-            allTicks++;
-            this.player.setFrozenTicks(allTicks);
+            this.player.setFrozenTicks(tick);
 
             if (tick++ % 40 == 0) {
-                tick = 0;
                 sendActionBarMessage("You are frozen", Formatting.AQUA);
             }
 

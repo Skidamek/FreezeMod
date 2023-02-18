@@ -67,7 +67,6 @@ public class Commands {
             if (player.isPlayer() && !player.isSpectator() && !frozenPlayers.containsKey(player.getUuid())) {
                 FrozenPlayer frozenPlayer = new FrozenPlayer(player.getX(), player.getY(), player.getZ());
                 frozenPlayers.put(player.getUuid(), frozenPlayer);
-                // chat message for the command sender
                 source.sendFeedback(TextHelper.literal(player.getName().getString() + " is now frozen").formatted(Formatting.AQUA), true);
             }
         }
