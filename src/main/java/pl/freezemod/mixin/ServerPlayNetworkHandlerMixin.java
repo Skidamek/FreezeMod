@@ -72,7 +72,7 @@ public class ServerPlayNetworkHandlerMixin {
             allTicks++;
             this.player.setFrozenTicks(allTicks);
 
-            if (tick++ % 20 == 0) {
+            if (tick++ % 40 == 0) {
                 tick = 0;
                 sendActionBarMessage("You are frozen", Formatting.AQUA);
             }
