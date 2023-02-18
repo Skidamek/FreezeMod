@@ -1,17 +1,16 @@
 package pl.freezemod;
 
-import com.google.common.collect.ImmutableList;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Formatting;
 
-import java.util.Collection;
+import java.util.List;
 
-import static pl.freezemod.Freeze.frozenPlayers;
-import static pl.freezemod.Freeze.frozenPlayersToRemove;
+import static pl.freezemod.Freeze.*;
 
 public class Commands {
     public static void register() {
@@ -19,58 +18,101 @@ public class Commands {
                 CommandManager.literal("freeze")
                     .requires(source -> source.hasPermissionLevel(3))
                     .then(
-                            CommandManager.literal("give")
-                                    .then(
-                                            CommandManager.argument("targets", EntityArgumentType.entities())
-                                                    .executes(
-                                                            context -> addEffect(
-                                                                    context.getSource(), EntityArgumentType.getEntities(context, "targets")
-                                                            )
-                                                    )
+                            CommandManager.argument("targets", EntityArgumentType.entities())
+                                    .executes(
+                                            context -> {
+                                                for (Entity player : EntityArgumentType.getEntities(context, "targets")) {
+                                                    ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
+                                                    context.getSource().sendFeedback(TextHelper.literal(player.getName().getString() + " is now frozen").formatted(Formatting.AQUA), true);
+                                                    return addEffect(serverPlayerEntity);
+                                                }
+
+                                                return 1;
+                                            }
+                                    )
+                    )
+                    .then(
+                            CommandManager.literal("server")
+                                    .executes(
+                                            context -> freezeServer(
+                                                    context.getSource()
+                                            )
                                     )
                     )
                     .then(
                     CommandManager.literal("remove")
                             .executes(
                                     context -> removeEffect(
-                                            context.getSource(), ImmutableList.of(context.getSource().getEntityOrThrow())
+                                            context.getSource().getPlayerOrThrow()
                                     )
                             )
                             .then(
                                     CommandManager.argument("targets", EntityArgumentType.entities())
                                             .executes(
-                                                    context -> removeEffect(
-                                                            context.getSource(), EntityArgumentType.getEntities(context, "targets")
+                                                    context -> {
+                                                        for (Entity player : EntityArgumentType.getEntities(context, "targets")) {
+                                                            ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
+                                                            context.getSource().sendFeedback(TextHelper.literal(player.getName().getString() + " is no longer frozen").formatted(Formatting.GREEN), true);
+                                                            return removeEffect(serverPlayerEntity);
+                                                        }
+
+                                                        return 1;
+                                                    }
+                                            )
+                            )
+
+                            .then(
+                                    CommandManager.literal("server")
+                                            .executes(
+                                                    context -> unFreezeServer(
+                                                            context.getSource()
                                                     )
                                             )
                             )
                     )
-
         ));
     }
 
-    private static int removeEffect(ServerCommandSource source, Collection<? extends Entity> targets) {
-        for (Entity player : targets) {
-            if (player.isPlayer() && frozenPlayers.containsKey(player.getUuid())) {
-                frozenPlayers.remove(player.getUuid());
-                frozenPlayersToRemove.add(player.getUuid()); // This will be removed in next tick (ServerPlayNetworkHandlerMixin), to make sure that everything is properly synchronized
-                source.sendFeedback(TextHelper.literal(player.getName().getString() + " is no longer frozen").formatted(Formatting.GREEN), true);
-            }
+    public static int addEffect(ServerPlayerEntity player) {
+        if (player.isPlayer() && !player.isSpectator() && !frozenPlayers.containsKey(player.getUuid())) {
+            FrozenPlayer frozenPlayer = new FrozenPlayer(player.getX(), player.getY(), player.getZ());
+            frozenPlayers.put(player.getUuid(), frozenPlayer);
         }
 
-        return 0;
+        return 1;
     }
 
+    private static int removeEffect(ServerPlayerEntity player) {
+        if (player.isPlayer() && frozenPlayers.containsKey(player.getUuid())) {
+            frozenPlayers.remove(player.getUuid());
+            frozenPlayersToRemove.add(player.getUuid()); // This will be removed in next tick (ServerPlayNetworkHandlerMixin), to make sure that everything is properly synchronized
+        }
 
-    private static int addEffect(ServerCommandSource source, Collection<? extends Entity> targets) {
-        for (Entity player : targets) {
-            if (player.isPlayer() && !player.isSpectator() && !frozenPlayers.containsKey(player.getUuid())) {
-                FrozenPlayer frozenPlayer = new FrozenPlayer(player.getX(), player.getY(), player.getZ());
-                frozenPlayers.put(player.getUuid(), frozenPlayer);
-                source.sendFeedback(TextHelper.literal(player.getName().getString() + " is now frozen").formatted(Formatting.AQUA), true);
+        return 1;
+    }
+
+    private static int freezeServer(ServerCommandSource source) {
+        freezeServer = true;
+
+        List<ServerPlayerEntity> players = source.getWorld().getPlayers();
+        for (ServerPlayerEntity player : players) {
+            addEffect(player);
+        }
+
+        return 1;
+    }
+
+    private static int unFreezeServer(ServerCommandSource source) {
+        freezeServer = false;
+
+        List<ServerPlayerEntity> players = source.getWorld().getPlayers();
+        for (ServerPlayerEntity player : players) {
+            if (frozenPlayers.containsKey(player.getUuid())) {
+                frozenPlayers.remove(player.getUuid());
+                frozenPlayersToRemove.add(player.getUuid()); // This will be removed in next tick (ServerPlayNetworkHandlerMixin), to make sure that everything is properly synchronized
             }
         }
 
-        return 0;
+        return 1;
     }
 }

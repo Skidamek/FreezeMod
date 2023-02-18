@@ -81,7 +81,6 @@ public class ServerPlayNetworkHandlerMixin {
         }
     }
 
-
     private void sendActionBarMessage(String message, Formatting color) throws CommandSyntaxException {
         Function<Text, Packet<?>> constructor = OverlayMessageS2CPacket::new;
         ServerCommandSource source = this.player.getCommandSource();
